@@ -19,12 +19,14 @@ if (!$host || !$user || !$database) {
 // Disable mysqli strict exceptions to prevent 500 errors on query failures
 mysqli_report(MYSQLI_REPORT_OFF);
 
-// Connect to MySQL
-$mysqli = @new mysqli($host, $user, $password, $database, (int)$port);
-
-// Check connection
-if ($mysqli->connect_error) {
-    die('Koneksi database gagal: ' . htmlspecialchars($mysqli->connect_error) . '<br><br>' .
+// Connect to MySQL using try-catch for PHP 8.1+ connection exception compatibility
+try {
+    $mysqli = @new mysqli($host, $user, $password, $database, (int)$port);
+    if ($mysqli->connect_error) {
+        throw new Exception($mysqli->connect_error);
+    }
+} catch (Exception $e) {
+    die('Koneksi database gagal: ' . htmlspecialchars($e->getMessage()) . '<br><br>' .
         'Coba cek kembali apakah variabel environment database (MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE) ' .
         'sudah terhubung di menu Variables pada layanan PHP Kakak di Railway.');
 }
