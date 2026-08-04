@@ -39,24 +39,39 @@ if (!file_exists($sqlFile)) {
 
 $sqlContent = file_get_contents($sqlFile);
 
-// Split queries (simple split on semicolon)
-$queries = array_filter(array_map('trim', explode(';', $sqlContent)));
+// Clean comments and header lines from SQL content before splitting
+$cleanSql = '';
+$lines = explode("\n", $sqlContent);
+foreach ($lines as $line) {
+    $trimmed = trim($line);
+    if (str_starts_with($trimmed, '--') || str_starts_with($trimmed, '#') || str_starts_with($trimmed, '/*') || str_starts_with($trimmed, '*')) {
+        continue;
+    }
+    $cleanSql .= $line . "\n";
+}
+
+// Split queries by semicolon
+$queries = array_filter(array_map('trim', explode(';', $cleanSql)));
 
 $successCount = 0;
 $errorCount = 0;
 $errors = [];
 
 foreach ($queries as $query) {
-    // Skip empty queries and comments
-    if (empty($query) || strpos(trim($query), '--') === 0 || strpos(trim($query), '/*') === 0) {
+    if (empty($query)) {
         continue;
     }
 
-    if ($mysqli->query($query) === TRUE) {
-        $successCount++;
-    } else {
+    try {
+        if ($mysqli->query($query) === TRUE) {
+            $successCount++;
+        } else {
+            $errorCount++;
+            $errors[] = $mysqli->error . ' (Query: ' . substr($query, 0, 50) . '...)';
+        }
+    } catch (Exception $e) {
         $errorCount++;
-        $errors[] = $mysqli->error . ' (Query: ' . substr($query, 0, 50) . '...)';
+        $errors[] = $e->getMessage() . ' (Query: ' . substr($query, 0, 50) . '...)';
     }
 }
 
