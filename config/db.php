@@ -8,14 +8,21 @@ $password = getenv('DB_PASSWORD') ?: getenv('MYSQLPASSWORD') ?: '';
 $database = getenv('DB_NAME') ?: getenv('MYSQLDATABASE') ?: 'temanpuli';
 $port = getenv('DB_PORT') ?: getenv('MYSQLPORT') ?: '3306';
 
-// Fallback to legacy production values if running on InfinityFree host without env configured
+// Detect environment
 $serverName = $_SERVER['SERVER_NAME'] ?? '';
 $isLocal = in_array($serverName, ['localhost', '127.0.0.1', '::1'], true)
     || str_starts_with($_SERVER['HTTP_HOST'] ?? $serverName, 'localhost')
     || str_starts_with($_SERVER['HTTP_HOST'] ?? $serverName, '127.0.0.1')
     || PHP_SAPI === 'cli';
 
-if (!$isLocal && getenv('DB_HOST') === false && getenv('MYSQLHOST') === false) {
+$isRailway = getenv('RAILWAY_ENVIRONMENT') !== false || getenv('RAILWAY_STATIC_URL') !== false || getenv('PORT') !== false;
+
+if ($isRailway && getenv('DB_HOST') === false && getenv('MYSQLHOST') === false) {
+    die("Koneksi database gagal: Variabel environment database belum terhubung di Railway. Silakan tambahkan MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, dan MYSQLDATABASE di menu Variables pada layanan PHP Kakak.");
+}
+
+// Fallback to legacy production values if running on InfinityFree host without env configured
+if (!$isLocal && !$isRailway && getenv('DB_HOST') === false && getenv('MYSQLHOST') === false) {
     $host = 'sql110.infinityfree.com';
     $user = 'if0_42146789';
     $password = 'Temanpulih123';
