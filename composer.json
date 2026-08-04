@@ -1,0 +1,9 @@
+{
+    "name": "glyptchi/temanpulih",
+    "description": "TemanPulih expressive writing journal web app",
+    "require": {
+        "php": ">=8.0",
+        "ext-mysqli": "*",
+        "ext-curl": "*"
+    }
+}
