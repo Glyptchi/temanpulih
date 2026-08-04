@@ -7,6 +7,7 @@ $result = $conn->query('SELECT content, note FROM affirmations ORDER BY RAND() L
 $affirmation = $result ? $result->fetch_assoc() : null;
 $content = $affirmation['content'] ?? 'Kamu tetap layak dicintai, bahkan saat ada ruang kosong yang belum terisi.';
 $note = $affirmation['note'] ?? 'Pengingat lembut untuk hati yang sedang belajar pulih.';
+$flash = consume_flash();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -43,12 +44,22 @@ $note = $affirmation['note'] ?? 'Pengingat lembut untuk hati yang sedang belajar
         <span class="affirmation-flower" aria-hidden="true">🌺</span>
       </div>
 
+      <?php if ($flash): ?>
+        <p class="auth-message <?php echo $flash['type'] === 'success' ? 'auth-message-success' : ''; ?>" style="margin-bottom: 1.5rem;">
+          <?php echo e($flash['message']); ?>
+        </p>
+      <?php endif; ?>
+
       <p class="section-kicker">A WHISPER FOR TODAY</p>
       <h1 id="affirmation-text">"<?php echo e($content); ?>"</h1>
 
       <div class="affirmation-actions">
         <button class="pill-button primary-pill" id="another-whisper" type="button">Another whisper</button>
-        <button class="pill-button soft-pill" type="button">Save to my heart</button>
+        <form action="save_affirmation.php" method="post" style="display: inline;">
+          <input type="hidden" name="content" id="save-content" value="<?php echo e($content); ?>" />
+          <input type="hidden" name="note" id="save-note" value="<?php echo e($note); ?>" />
+          <button class="pill-button soft-pill" type="submit">Save to my heart</button>
+        </form>
       </div>
     </section>
   </main>
@@ -63,6 +74,8 @@ $note = $affirmation['note'] ?? 'Pengingat lembut untuk hati yang sedang belajar
   <script>
     const anotherButton = document.getElementById("another-whisper");
     const affirmationText = document.getElementById("affirmation-text");
+    const saveContentInput = document.getElementById("save-content");
+    const saveNoteInput = document.getElementById("save-note");
 
     anotherButton.addEventListener("click", async () => {
       anotherButton.disabled = true;
@@ -74,6 +87,8 @@ $note = $affirmation['note'] ?? 'Pengingat lembut untuk hati yang sedang belajar
         });
         const data = await response.json();
         affirmationText.textContent = `"${data.content}"`;
+        saveContentInput.value = data.content;
+        saveNoteInput.value = data.note;
       } catch (error) {
         affirmationText.textContent = '"A soft breath is enough for this moment."';
       } finally {

@@ -1,4 +1,40 @@
 <?php
+// Function to load .env file globally
+function loadEnv(string $path): void
+{
+    if (!is_file($path)) {
+        return;
+    }
+
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (str_starts_with(trim($line), '#')) {
+            continue;
+        }
+
+        $parts = explode('=', $line, 2);
+        if (count($parts) === 2) {
+            $key = trim($parts[0]);
+            $val = trim($parts[1]);
+            
+            // Remove quotes if present
+            if (str_starts_with($val, '"') && str_ends_with($val, '"')) {
+                $val = substr($val, 1, -1);
+            } elseif (str_starts_with($val, "'") && str_ends_with($val, "'")) {
+                $val = substr($val, 1, -1);
+            }
+
+            if (!array_key_exists($key, $_SERVER) && !array_key_exists($key, $_ENV)) {
+                putenv("{$key}={$val}");
+                $_ENV[$key] = $val;
+                $_SERVER[$key] = $val;
+            }
+        }
+    }
+}
+
+loadEnv(__DIR__ . '/../.env');
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }

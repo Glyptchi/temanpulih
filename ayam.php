@@ -79,7 +79,7 @@ foreach ($crisisKeywords as $keyword) {
             . "- Jika Kakak merasa dalam bahaya sekarang, segera hubungi layanan darurat setempat atau pergi ke tempat yang aman.\n\n"
             . "Untuk saat ini, coba jauhkan benda yang bisa membahayakan, tetap bersama orang lain, lalu tarik napas pelan: hirup 4 hitungan, tahan 7 hitungan, hembuskan 8 hitungan.";
 
-        $stmt = $conn->prepare('INSERT INTO safe_space_messages (user_id, role, message) VALUES (?, "user", ?), (?, "model", ?)');
+        $stmt = $conn->prepare('INSERT INTO safe_space_messages (user_id, role, sender, message) VALUES (?, "user", "user", ?), (?, "model", "puli", ?)');
         $stmt->bind_param('isis', $userId, $userMessage, $userId, $reply);
         $stmt->execute();
 
@@ -264,7 +264,7 @@ $reply = $data['choices'][0]['message']['content']
     ?? 'Aku di sini mendengarkanmu, Kak. Ceritakan pelan-pelan ya.';
 $reply = str_replace('—', ',', $reply);
 
-$stmt = $conn->prepare('INSERT INTO safe_space_messages (user_id, role, message) VALUES (?, "user", ?), (?, "model", ?)');
+$stmt = $conn->prepare('INSERT INTO safe_space_messages (user_id, role, sender, message) VALUES (?, "user", "user", ?), (?, "model", "puli", ?)');
 $stmt->bind_param('isis', $userId, $userMessage, $userId, $reply);
 $stmt->execute();
 

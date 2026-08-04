@@ -19,12 +19,20 @@ $moodStmt->bind_param('i', $userId);
 $moodStmt->execute();
 $moods = (int) ($moodStmt->get_result()->fetch_assoc()['total'] ?? 0);
 
+$savedAffStmt = $conn->prepare("SELECT affirmation_content, affirmation_note FROM saved_affirmations WHERE user_id = ? ORDER BY created_at DESC");
+$savedAffStmt->bind_param('i', $userId);
+$savedAffStmt->execute();
+$savedAffirmations = $savedAffStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
 $datesStmt = $conn->prepare("SELECT DISTINCT entry_date FROM journal_entries WHERE user_id = ? AND content IS NOT NULL AND TRIM(content) <> '' ORDER BY entry_date DESC");
 $datesStmt->bind_param('i', $userId);
 $datesStmt->execute();
 $dates = array_column($datesStmt->get_result()->fetch_all(MYSQLI_ASSOC), 'entry_date');
 $streak = 0;
 $cursor = new DateTime('today');
+if (!empty($dates) && $dates[0] === date('Y-m-d', strtotime('-1 day'))) {
+    $cursor = new DateTime('yesterday');
+}
 foreach ($dates as $date) {
     if ($date === $cursor->format('Y-m-d')) {
         $streak++;
@@ -45,6 +53,20 @@ foreach ($dates as $date) {
   </section>
   <section class="profile-stats"><div class="dashboard-card stat-card"><span>STREAK</span><strong>🔥 <?php echo $streak; ?> days</strong></div><div class="dashboard-card stat-card"><span>ENTRIES</span><strong>📔 <?php echo $entries; ?></strong></div><div class="dashboard-card stat-card"><span>MOODS TRACKED</span><strong>🌺 <?php echo $moods; ?></strong></div></section>
   <section class="dashboard-card journey-card"><h2>Your emotional journey</h2><div class="journey-item is-done"><span>✓</span><div><strong>First journal entry</strong><p><?php echo $entries > 0 ? 'completed' : 'soon'; ?></p></div></div><div class="journey-item <?php echo $streak >= 7 ? 'is-done' : ''; ?>"><span><?php echo $streak >= 7 ? '✓' : '...'; ?></span><div><strong>7-day streak</strong><p><?php echo $streak >= 7 ? 'completed' : 'soon'; ?></p></div></div><div class="journey-item <?php echo $moods >= 30 ? 'is-done' : ''; ?>"><span><?php echo $moods >= 30 ? '✓' : '...'; ?></span><div><strong>30 mood check-ins</strong><p><?php echo $moods >= 30 ? 'completed' : 'soon'; ?></p></div></div></section>
+
+  <?php if (!empty($savedAffirmations)): ?>
+    <section class="dashboard-card journey-card" style="margin-top: 1.5rem;">
+      <h2>Whispers in your heart 🌷</h2>
+      <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
+        <?php foreach ($savedAffirmations as $aff): ?>
+          <div style="border-left: 3px solid var(--primary, #a78bfa); padding-left: 0.75rem;">
+            <p style="font-style: italic; font-size: 0.95rem; margin: 0; line-height: 1.4;">"<?php echo e($aff['affirmation_content']); ?>"</p>
+            <small style="color: var(--text-muted, #9ca3af); font-size: 0.8rem; display: block; margin-top: 0.25rem;">— <?php echo e($aff['affirmation_note']); ?></small>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </section>
+  <?php endif; ?>
 </main>
 </body>
 </html>
