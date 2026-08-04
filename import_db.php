@@ -16,12 +16,13 @@ if (!$host || !$user || !$database) {
     die('Error: Missing database credentials in environment variables');
 }
 
-// Connect to MySQL
-$mysqli = new mysqli($host, $user, $password, $database, (int)$port);
-
-// Check connection
-if ($mysqli->connect_error) {
-    die('Connection failed: ' . $mysqli->connect_error);
+// Connect to MySQL using a try-catch block for PHP 8.1+ compatibility
+try {
+    $mysqli = new mysqli($host, $user, $password, $database, (int)$port);
+} catch (Exception $e) {
+    die('Koneksi database gagal: ' . htmlspecialchars($e->getMessage()) . '<br><br>' .
+        'Coba cek kembali apakah variabel environment database (MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE) ' .
+        'sudah terhubung di menu Variables pada layanan PHP Kakak di Railway.');
 }
 
 // Read SQL file
